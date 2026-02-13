@@ -3,8 +3,8 @@ export const generateRecipe = async (ingredients: string[]) => {
     const apiKey = import.meta.env.VITE_API_KEY;
     if (!apiKey) throw new Error("Falta la API Key en Vercel");
 
-    // Llamamos directamente a la "puerta" de Google sin usar librerías externas
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // URL corregida a la versión estable v1
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -22,10 +22,11 @@ export const generateRecipe = async (ingredients: string[]) => {
       throw new Error(data.error.message);
     }
 
+    // Si todo va bien, devolvemos la receta
     return data.candidates[0].content.parts[0].text;
     
   } catch (error: any) {
     console.error("Error detallado:", error);
-    throw new Error(error.message || "Error de conexión");
+    throw new Error(error.message || "Error de conexión con el Chef");
   }
 };
