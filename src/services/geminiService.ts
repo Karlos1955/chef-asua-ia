@@ -1,27 +1,28 @@
-import * as GoogleGenerativeAI from "@google/generative-ai";
-
 export const generateRecipe = async (ingredients: string[]) => {
   try {
     const apiKey = import.meta.env.VITE_API_KEY;
     if (!apiKey) throw new Error("Falta la API Key en Vercel");
 
-    // Usamos una comprobación doble para encontrar la clase GoogleGenAI
-    // Esto soluciona el error de "not exported" en todas las versiones
-    const GenAIClass = (GoogleGenerativeAI as any).GoogleGenAI || 
-                       (GoogleGenerativeAI as any).default?.GoogleGenAI;
+    // Llamamos directamente a la "puerta" de Google sin usar librerías externas
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    if (!GenAIClass) {
-      throw new Error("No se pudo cargar la librería de Google");
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: `Actúa como un chef profesional. Crea una receta con: ${ingredients.join(', ')}. Responde en español.` }]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error.message);
     }
 
-    const genAI = new GenAIClass(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const prompt = `Actúa como un chef profesional. Crea una receta con: ${ingredients.join(', ')}. Responde en español.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    return data.candidates[0].content.parts[0].text;
     
   } catch (error: any) {
     console.error("Error detallado:", error);
