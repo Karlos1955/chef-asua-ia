@@ -1,7 +1,8 @@
-import { GoogleGenAI } from "@google/generative-ai"
+import * as GoogleGenerativeAI from "@google/generative-ai"
 
 const apiKey = import.meta.env.VITE_API_KEY
-const genAI = new GoogleGenAI(apiKey || "")
+// Cambiamos la forma de crear la instancia para evitar el error de exportación
+const genAI = new GoogleGenerativeAI.GoogleGenAI(apiKey || "")
 
 export const generateRecipe = async (ingredients: string[]) => {
   try {
@@ -12,6 +13,6 @@ export const generateRecipe = async (ingredients: string[]) => {
     return response.text()
   } catch (error) {
     console.error(error)
-    throw new Error("Fallo en la cocina de la IA")
+    throw new Error("Fallo en la conexión con la IA")
   }
 }
