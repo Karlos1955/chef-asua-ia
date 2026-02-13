@@ -3,35 +3,35 @@ export const generateRecipe = async (ingredients: string[]) => {
     const apiKey = import.meta.env.VITE_API_KEY;
     if (!apiKey) throw new Error("Falta la API Key en Vercel");
 
-    // URL actualizada con la ruta completa del modelo
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // CAMBIO CLAVE: Usamos 'gemini-pro' en lugar de 'gemini-1.5-flash'
+    // Y volvemos a 'v1beta' que es más flexible con los nombres de modelos
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: `Actúa como un chef profesional. Crea una receta creativa con estos ingredientes: ${ingredients.join(', ')}. Responde en español.` }]
+          parts: [{ text: `Actúa como un chef profesional. Crea una receta con: ${ingredients.join(', ')}. Responde en español.` }]
         }]
       })
     });
 
     const data = await response.json();
     
-    // Si hay un error en la respuesta de Google, lo mostramos
     if (data.error) {
+      // Si el error dice "API_KEY_INVALID", entonces el problema es la llave
       throw new Error(data.error.message);
     }
 
-    // Verificamos que tengamos respuesta antes de intentar leerla
     if (data.candidates && data.candidates[0].content.parts[0].text) {
       return data.candidates[0].content.parts[0].text;
     } else {
-      throw new Error("Google no devolvió una receta válida");
+      throw new Error("El modelo no devolvió texto. Prueba con otros ingredientes.");
     }
     
   } catch (error: any) {
-    console.error("Error detallado:", error);
+    console.error("Error:", error);
     throw new Error(error.message || "Error de conexión");
   }
 };
