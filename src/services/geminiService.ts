@@ -1,18 +1,22 @@
-import * as GoogleGenerativeAI from "@google/generative-ai"
+import { GoogleGenAI } from "@google/generative-ai"
 
-const apiKey = import.meta.env.VITE_API_KEY
-// Cambiamos la forma de crear la instancia para evitar el error de exportación
-const genAI = new GoogleGenerativeAI.GoogleGenAI(apiKey || "")
+// Usamos una función para obtener la API Key de forma segura
+const getApiKey = () => import.meta.env.VITE_API_KEY || ""
 
 export const generateRecipe = async (ingredients: string[]) => {
   try {
+    const apiKey = getApiKey()
+    if (!apiKey) throw new Error("Falta la API Key en Vercel")
+    
+    const genAI = new GoogleGenAI(apiKey)
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    
     const prompt = `Actúa como un chef. Crea una receta con: ${ingredients.join(', ')}. Responde en español.`
+    
     const result = await model.generateContent(prompt)
-    const response = await result.response
-    return response.text()
+    return result.response.text()
   } catch (error) {
-    console.error(error)
-    throw new Error("Fallo en la conexión con la IA")
+    console.error("Error en el Chef:", error)
+    throw error
   }
 }
